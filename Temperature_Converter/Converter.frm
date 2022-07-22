@@ -94,6 +94,9 @@ Private Sub SelectTextOnKeyboadFocus(ByRef textBox As textBox)
 End Sub
 
 Private Sub Form_Load()
+    ' This is a bit rubbish as by setting the ES_NUMBER style, you can't enter
+	' a minus sign or a decimal, just digits. A better implementation might be
+	' to use a regular expression like in the Flight Booker sample
     SetNumericOnlyInput Tc
     SetNumericOnlyInput Tf
 End Sub
