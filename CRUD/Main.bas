@@ -1,5 +1,9 @@
 Attribute VB_Name = "MainModule"
 Option Explicit
+' API declarations
+Public Declare Function GetKeyState Lib "user32" (ByVal nVirtKey As Long) As Integer
+Public Const VK_TAB = &H9
+Public Const VK_LMENU = &HA4
 
 Public Sub Main()
     Dim testPeople As People
@@ -35,3 +39,4 @@ Public Function CreateSomePeople() As People
     
     Set CreateSomePeople = result
 End Function
+

@@ -12,7 +12,10 @@ Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
+'* A Plain Old COM Object to represent the personal details that can be
+'* edited in the user interface
 
+Private m_Id As Integer
 Private m_Name As String
 Private m_Surname As String
 
@@ -33,4 +36,14 @@ End Property
 
 Public Property Let Surname(ByVal value As String)
     m_Surname = value
+End Property
+
+
+Public Property Get id() As Integer
+    id = m_Id
+End Property
+
+
+Public Property Let id(ByVal value As Integer)
+    m_Id = value
 End Property

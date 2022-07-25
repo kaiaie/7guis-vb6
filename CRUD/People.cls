@@ -12,48 +12,104 @@ Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
+'* A repository for Person objects
+'*
+'* \remarks This is not as clean as I'd like, owing to shortcomings with
+'* COM Collection objects. It would be nicer to use either a real in-memory
+'* database or a data structure like a tree, but it would take too long!
 
+Private m_Id As Integer
 Private m_People As Collection
 
+'* \brief Adds a person to the repository
 Public Sub Add(ByRef p As Person)
-    m_People.Add p
+    p.id = m_Id
+    m_People.Add p, ToKey(m_Id)
+    m_Id = m_Id + 1
 End Sub
 
 
-Public Sub Update(ByVal index As Integer, ByRef updated As Person)
+'* \brief Updates the details of an existing person
+Public Sub Update(ByRef updated As Person)
     Dim existing As Person
     
-    Set existing = m_People(index)
-    With existing
-        .Name = updated.Name
-        .Surname = updated.Surname
-    End With
+    For Each existing In m_People
+        If existing.id = updated.id Then
+            existing.Name = updated.Name
+            existing.Surname = updated.Surname
+            Exit Sub
+        End If
+    Next
+    Err.Raise vbObjectError + 1900, _
+        Description:="Person not found"
 End Sub
 
 
-Public Sub Delete(ByVal index As Integer)
-    m_People.Remove index
+'* Deletes a person from the repository
+Public Sub Delete(ByVal id As Integer)
+    Dim i As Integer
+    Dim p As Person
+    For i = 1 To m_People.Count
+        Set p = m_People(i)
+        If p.id = id Then
+            m_People.Remove i
+            Exit Sub
+        End If
+    Next
 End Sub
 
 
+'* \brief Returns the nth person in the repository by order of insertion
 Public Function GetPersonByIndex(ByVal index As Integer) As Person
     Set GetPersonByIndex = m_People(index)
 End Function
 
 
+'* \brief Returns the person with the specified ID
+'* IDs are assigned in ascending order by insertion but remain the
+'* same regardless of deletions, unlike GetPersonByIndex
+Public Function GetPersonByID(ByVal id As Integer) As Person
+    Dim key As String
+    Dim result As Person
+    key = ToKey(id)
+    On Error Resume Next
+    Set result = m_People(key)
+    On Error GoTo 0
+    If Not result Is Nothing Then
+        Set GetPersonByID = result
+        Exit Function
+    End If
+    Err.Raise vbObjectError + 1900, _
+        Description:="Person not found"
+End Function
+
+
+'* Returns the number of people in the repository
 Public Function Count() As Integer
     Count = m_People.Count
 End Function
 
 
-Public Function GetIterator(Optional ByVal filter As IPersonFilter = Nothing) As PersonIterator
+'* Returns an object that allows the list of people to be traversed
+Public Function GetIterator(Optional ByVal Filter As IPersonFilter = Nothing) As PersonIterator
     Dim result As New PersonIterator
     Set result.Source = Me
-    Set result.filter = filter
+    Set result.Filter = Filter
+    result.MoveFirst
     Set GetIterator = result
 End Function
+
 
 Private Sub Class_Initialize()
     Set m_People = New Collection
 End Sub
 
+
+Private Function ToKey(ByVal id As Integer)
+    ToKey = "P" & Format(id, String(5, "0"))
+End Function
+
+
+Private Sub Class_Terminate()
+    Set m_People = Nothing
+End Sub
