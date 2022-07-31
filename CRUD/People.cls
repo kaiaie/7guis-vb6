@@ -23,6 +23,10 @@ Private m_People As Collection
 
 '* \brief Adds a person to the repository
 Public Sub Add(ByRef p As Person)
+    If p Is Nothing Then
+        Err.Raise vbObjectError + 1901, _
+            Description:="An empty person cannot be added"
+    End If
     p.id = m_Id
     m_People.Add p, ToKey(m_Id)
     m_Id = m_Id + 1
