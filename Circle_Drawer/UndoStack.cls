@@ -42,14 +42,12 @@ End Property
 Public Sub Undo()
     m_Actions(m_CurrentIndex).Reverse
     m_CurrentIndex = m_CurrentIndex - 1
-    Debug.Print Strings.Format("UndoStack::Undo: {{ count: {0}, current: {1}}", m_ActionCount, m_CurrentIndex)
 End Sub
 
 
 Public Sub Redo()
     m_Actions(m_CurrentIndex + 1).Forward
     m_CurrentIndex = m_CurrentIndex + 1
-    Debug.Print Strings.Format("UndoStack::Redo: {{ count: {0}, current: {1}}", m_ActionCount, m_CurrentIndex)
 End Sub
 
 
@@ -78,7 +76,6 @@ Public Sub AddCircle(ByVal Index As Integer, ByVal X As Single, ByVal Y As Singl
         .CircleX = X
         .CircleY = Y
     End With
-    Debug.Print Strings.Format("UndoStack::AddCircle: {{ index: {0}, x: {1}, y:{2} }", Index, X, Y)
     Add cmd
 End Sub
 
@@ -88,5 +85,4 @@ Private Sub Add(ByRef cmd As ICommand)
     m_ActionCount = m_CurrentIndex
     ReDim Preserve m_Actions(1 To m_CurrentIndex)
     Set m_Actions(m_CurrentIndex) = cmd
-    Debug.Print Strings.Format("UndoStack::Add: {{ count: {0}, current: {1}}", m_ActionCount, m_CurrentIndex)
 End Sub
