@@ -22,23 +22,24 @@ Begin VB.Form CellsForm
    Begin VB.TextBox T 
       Appearance      =   0  'Flat
       Height          =   288
-      Left            =   360
+      Left            =   0
       TabIndex        =   1
-      Top             =   2640
+      Top             =   4440
       Visible         =   0   'False
       Width           =   612
    End
    Begin MSFlexGridLib.MSFlexGrid G 
-      Height          =   2412
+      Height          =   4452
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   3732
-      _ExtentX        =   6583
-      _ExtentY        =   4255
+      Width           =   7572
+      _ExtentX        =   13356
+      _ExtentY        =   7853
       _Version        =   393216
       Rows            =   101
       Cols            =   27
+      AllowUserResizing=   3
    End
    Begin VB.Menu FileMenu 
       Caption         =   "&File"
@@ -69,6 +70,7 @@ End Sub
 
 Private Sub Form_Resize()
     If Me.WindowState = vbMinimized Then Exit Sub
+    ' Resize grid control to fill form window
     G.Move 0, 0, Me.ScaleWidth, Me.ScaleHeight
 End Sub
 
@@ -108,7 +110,7 @@ Private Sub EditCell()
     With T
         .Move G.ColPos(G.Col), G.RowPos(G.Row), G.ColWidth(G.Col)
         .Visible = True
-        .Text = G.Text
+        .Text = Model.GetCellInfo(G.Row, G.Col).CellValue
         .SetFocus
     End With
 End Sub
@@ -129,13 +131,12 @@ Private Sub AcceptCellEdits()
         .Visible = False
         If Left(.Text, 1) = "=" Then
             cl.CellType = Formula
+            cl.CellFormula = Mid(.Text, 2)
         Else
             cl.CellType = Literal
-            If IsNumeric(.Text) Then
-            Else
-            End If
+            cl.CellValue = Model.StringToVariant(.Text)
         End If
-        G.Text = .Text
+        G.Text = FormatCell(cl.CellValue)
     End With
     G.SetFocus
 End Sub
@@ -146,6 +147,10 @@ Private Sub T_KeyUp(KeyCode As Integer, Shift As Integer)
         DiscardCellEdits
     ElseIf Shift = 0 And KeyCode = vbKeyReturn Then
         AcceptCellEdits
+        ' Move to the next row
+        If G.Row < 100 Then
+            G.Row = G.Row + 1
+        End If
     End If
 End Sub
 
@@ -154,3 +159,11 @@ Private Sub T_LostFocus()
     DiscardCellEdits
 End Sub
 
+
+Private Function FormatCell(ByVal CellValue As Variant) As String
+    If IsNull(CellValue) Then
+        FormatCell = "#NULL"
+    Else
+        FormatCell = CStr(CellValue)
+    End If
+End Function

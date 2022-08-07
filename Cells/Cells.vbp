@@ -4,6 +4,7 @@ Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\..\..\WIND
 Object={5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0; MSFLXGRD.OCX
 Class=CellInfo; CellInfo.cls
 Class=GridModel; GridModel.cls
+Class=Expression; Expression.cls
 IconForm="CellsForm"
 Startup="CellsForm"
 Command32=""
