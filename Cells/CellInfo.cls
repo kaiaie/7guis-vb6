@@ -20,8 +20,8 @@ End Enum
 
 Private m_CellType As CellContents
 Private m_Value As Variant
-Private m_Dependencies() As Variant
 Private m_Expression As Expression
+Private m_Model As GridModel
 
 
 Public Property Get CellType() As CellContents
@@ -54,7 +54,38 @@ End Property
 
 
 Public Property Let CellFormula(ByVal Value As String)
+    Dim r As New Resolver
+    Set r.Model = Model
     Set m_Expression = New Expression
+    Set m_Expression.Resolver = r
     m_Expression.Expression = Value
-    CellValue = m_Expression.Evaluate
+    CellValue = m_Expression.Evaluate()
 End Property
+
+
+Public Property Get Model() As GridModel
+    Set Model = m_Model
+End Property
+
+
+Public Property Set Model(ByRef Value As GridModel)
+    Set m_Model = Value
+End Property
+
+
+Private Sub Class_Terminate()
+    Set m_Model = Nothing
+End Sub
+
+
+Public Property Get Dependencies() As Collection
+    If CellType = Formula Then
+        Set Dependencies = m_Expression.ExternalReferences
+    End If
+End Property
+
+
+Public Sub Recalculate()
+    If CellType <> Formula Then Exit Sub
+    CellValue = m_Expression.Evaluate()
+End Sub

@@ -79,6 +79,7 @@ Private Function FindCell(ByVal r As Integer, c As Integer) As CellInfo
     Next
     ' Nothing found; create a new cell
     Dim cl As New CellInfo
+    Set cl.Model = Me
     m_Rows.Add r
     m_Cols.Add c
     m_Cells.Add cl
@@ -87,7 +88,28 @@ End Function
 
 
 Public Sub Recalculate()
-
+    ' Build the dependency graph
+    Dim i As Integer, r As Integer, c As Integer, ci As CellInfo
+    Dim cellAddress As String, v As Variant
+    Dim G As New Graph
+    For i = 1 To m_Rows.Count
+        r = m_Rows(i)
+        c = m_Cols(i)
+        cellAddress = Chr(64 + c) & CStr(r)
+        Set ci = m_Cells(i)
+        If ci.CellType = Formula Then
+            G.AddNode cellAddress
+            For Each v In ci.Dependencies
+                G.AddEdge cellAddress, CStr(v)
+            Next
+        End If
+    Next
+    Dim cl As Collection
+    Set cl = G.TopologicalSort()
+    For Each v In cl
+        Set ci = GetCellInfo(CStr(v))
+        ci.Recalculate
+    Next
 End Sub
 
 
