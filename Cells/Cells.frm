@@ -110,7 +110,7 @@ Private Sub EditCell()
     With T
         .Move G.ColPos(G.Col), G.RowPos(G.Row), G.ColWidth(G.Col)
         .Visible = True
-        .Text = Model.GetCellInfo(G.Row, G.Col).CellValue
+        .Text = Model.GetCellInfo(G.Row - G.FixedRows, G.Col - G.FixedCols).CellValue
         .SetFocus
     End With
 End Sub
@@ -126,7 +126,7 @@ End Sub
 
 Private Sub AcceptCellEdits()
     Dim cl As CellInfo
-    Set cl = Model.GetCellInfo(G.Row, G.Col)
+    Set cl = Model.GetCellInfo(G.Row - G.FixedRows, G.Col - G.FixedCols)
     With T
         .Visible = False
         If Left(.Text, 1) = "=" Then
@@ -136,9 +136,9 @@ Private Sub AcceptCellEdits()
             cl.CellType = Literal
             cl.CellValue = Model.StringToVariant(.Text)
         End If
-        G.Text = FormatCell(cl.CellValue)
     End With
     G.SetFocus
+    RefreshGrid
 End Sub
 
 
@@ -167,3 +167,48 @@ Private Function FormatCell(ByVal CellValue As Variant) As String
         FormatCell = CStr(CellValue)
     End If
 End Function
+
+
+Private Function RefreshGrid()
+    Dim errorOccurred As Boolean
+TryRecalculate:
+    On Error GoTo ErrRecalculate
+    Model.Recalculate
+    GoTo EndRecalculate
+
+ErrRecalculate:
+    If Err.Number = (vbObjectError + 990) Then
+        MsgBox _
+            Prompt:="You have a circular reference somewhere in your formulas!", _
+            Buttons:=vbInformation Or vbOKOnly, _
+            Title:=Me.Caption
+    Else
+        MsgBox _
+            Prompt:=Strings.Format( _
+                "An unexpected error ""{0}"" (code: {1}) occurred at {2}", _
+                Err.Description, Err.Number, Err.Source), _
+            Buttons:=vbCritical Or vbOKOnly, _
+            Title:=Me.Caption
+    End If
+    errorOccurred = True
+
+EndRecalculate:
+    On Error GoTo 0
+    
+    If Not errorOccurred Then
+        Dim savedRow As Long, savedCol As Long
+        savedRow = G.Row: savedCol = G.Col
+        G.Clear
+        SetGridLabels
+        Dim cell As Variant
+        Dim r As Integer, c As Integer, v As Variant
+        For Each cell In Model.GetAllCells()
+            G.Row = cell(0) + G.FixedRows
+            G.Col = cell(1) + G.FixedCols
+            G.Text = FormatCell(cell(2))
+        Next
+        G.Row = savedRow: G.Col = savedCol
+    End If
+    Exit Function
+End Function
+

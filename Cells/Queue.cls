@@ -16,7 +16,11 @@ Option Explicit
 Private m_Queue As New Collection
 
 Public Sub Enqueue(ByVal Value As Variant)
-    m_Queue.Add Value, Before:=1
+    If m_Queue.Count = 0 Then
+        m_Queue.Add Value
+    Else
+        m_Queue.Add Value, Before:=1
+    End If
 End Sub
 
 
@@ -44,10 +48,14 @@ End Sub
 
 
 Public Function Clone() As Queue
-    Dim result As Queue
+    Dim result As New Queue
+    Dim temp As New Stack
     Dim v As Variant
     For Each v In m_Queue
-        result.Enqueue v
+        temp.Push v
     Next
+    Do Until temp.IsEmpty
+        result.Enqueue temp.Pop()
+    Loop
     Set Clone = result
 End Function

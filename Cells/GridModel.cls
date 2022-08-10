@@ -18,60 +18,63 @@ Private m_Cols As New Collection
 Private m_Cells As New Collection
 
 
-Public Function GetCellInfo(ByVal AddressOrRowIndex As Variant, Optional ByVal ColIndex As Integer) As CellInfo
-    Dim r As Integer, c As Integer
+Public Function GetCellInfo(ByVal AddressOrRowIndex As Variant, Optional ByVal ColIndex As Long) As CellInfo
+    Dim r As Long, c As Long
     Dim cellAddress As String, head As String, tail As String
     If VarType(AddressOrRowIndex) = vbString Then
-        If Not IsMissing(ColIndex) Then
-            Err.Raise vbObjectError + 1330, _
-                Description:="A cell may be specified either by an address of the form ""X99"", or by a row and a column index"
-        End If
         cellAddress = CStr(AddressOrRowIndex)
         If Len(cellAddress) < 2 Or Len(cellAddress) > 3 Then
             Err.Raise vbObjectError + 1331, _
+                Source:="GridModel::GetCellInfo", _
                 Description:="The cell address is invalid"
         End If
         head = UCase(Left(cellAddress, 1))
         tail = Mid(cellAddress, 2)
         If head < "A" Or head > "Z" Then
             Err.Raise vbObjectError + 1331, _
+                Source:="GridModel::GetCellInfo", _
                 Description:="The column label must be a letter between A and Z"
         End If
-        r = Asc(head) - 64
+        c = Asc(head) - 65
         If Not IsNumeric(tail) Then
             Err.Raise vbObjectError + 1331, _
+                Source:="GridModel::GetCellInfo", _
                 Description:="The row index must be a number"
         End If
-        c = CInt(tail)
-        If c < 0 Or c > 99 Then
+        r = CLng(tail)
+        If r < 0 Or r > 99 Then
             Err.Raise vbObjectError + 1331, _
+                Source:="GridModel::GetCellInfo", _
                 Description:="The column index must be between 0 and 99"
         End If
-    ElseIf VarType(AddressOrRowIndex) = vbInteger Then
+    ElseIf VarType(AddressOrRowIndex) = vbInteger Or VarType(AddressOrRowIndex) = vbLong Then
         If IsMissing(ColIndex) Then
             Err.Raise vbObjectError + 1330, _
+                Source:="GridModel::GetCellInfo", _
                 Description:="A cell may be specified either by an address of the form ""X99"", or by a row and a column index"
         End If
-        r = CInt(AddressOrRowIndex)
-        If r < 1 Or r > 26 Then
+        r = CLng(AddressOrRowIndex)
+        If r < 0 Or r > 99 Then
             Err.Raise vbObjectError + 1331, _
-                Description:="The column label must between 1 and 26"
+                Source:="GridModel::GetCellInfo", _
+                Description:="The row index must between 0 and 99"
         End If
         c = ColIndex
-        If c < 0 Or c > 99 Then
+        If c < 0 Or c > 25 Then
             Err.Raise vbObjectError + 1331, _
-                Description:="The column index must be between 0 and 99"
+                Source:="GridModel::GetCellInfo", _
+                Description:="The column index must be between 0 and 25"
         End If
     End If
     Set GetCellInfo = FindCell(r, c)
 End Function
 
 
-Private Function FindCell(ByVal r As Integer, c As Integer) As CellInfo
+Private Function FindCell(ByVal r As Long, c As Long) As CellInfo
     Dim i As Integer
     For i = 1 To m_Rows.Count
-        If CInt(m_Rows(i)) = r Then
-            If CInt(m_Cols(i)) = c Then
+        If CLng(m_Rows(i)) = r Then
+            If CLng(m_Cols(i)) = c Then
                 Set FindCell = m_Cells(i)
                 Exit Function
             End If
@@ -95,10 +98,10 @@ Public Sub Recalculate()
     For i = 1 To m_Rows.Count
         r = m_Rows(i)
         c = m_Cols(i)
-        cellAddress = Chr(64 + c) & CStr(r)
+        cellAddress = Chr(65 + c) & CStr(r)
         Set ci = m_Cells(i)
         If ci.CellType = Formula Then
-            G.AddNode cellAddress
+            If Not G.NodeExists(cellAddress) Then G.AddNode cellAddress
             For Each v In ci.Dependencies
                 G.AddEdge cellAddress, CStr(v)
             Next
@@ -123,4 +126,17 @@ Public Function StringToVariant(ByVal StringValue As String) As Variant
     Else
         StringToVariant = StringValue
     End If
+End Function
+
+
+Public Function GetAllCells() As Collection
+    Dim result As New Collection
+    Dim i As Integer, r As Integer, c As Integer, ci As CellInfo
+    For i = 1 To m_Rows.Count
+        r = m_Rows(i)
+        c = m_Cols(i)
+        Set ci = m_Cells(i)
+        result.Add Array(r, c, ci.CellValue)
+    Next
+    Set GetAllCells = result
 End Function

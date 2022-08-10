@@ -52,7 +52,7 @@ End Property
 
 
 Public Property Set Resolver(ByRef Value As Resolver)
-    Set m_Resolver = Resolver
+    Set m_Resolver = Value
 End Property
 
 
@@ -115,9 +115,15 @@ Private Sub Parse()
     Dim gotParen As Boolean
     For Each token In GetTokens()
         If Len(CStr(token)) = 1 And InStr(OPERATORS, CStr(token)) <> 0 Then
-            Do While CStr(opStack.Peek) <> "(" And _
-                GetPrecedence(CStr((opStack.Peek))) >= GetPrecedence(CStr(token))
-                outputQueue.Enqueue opStack.Pop()
+            Do
+                If opStack.IsEmpty Then
+                    Exit Do
+                ElseIf CStr(opStack.Peek) <> "(" And _
+                    GetPrecedence(CStr((opStack.Peek))) >= GetPrecedence(CStr(token)) Then
+                    outputQueue.Enqueue opStack.Pop()
+                Else
+                    Exit Do
+                End If
             Loop
             opStack.Push token
         ElseIf CStr(token) = "(" Then
@@ -149,6 +155,7 @@ Private Sub Parse()
         End If
         outputQueue.Enqueue opStack.Pop()
     Loop
+    Set m_ParsedExpression = outputQueue
 End Sub
 
 

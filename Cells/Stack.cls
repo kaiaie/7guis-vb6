@@ -51,3 +51,8 @@ Public Function Peek() As Variant
     End If
     Peek = m_Stack(Count)
 End Function
+
+
+Public Property Get IsEmpty() As Boolean
+    IsEmpty = (Count = 0)
+End Property
